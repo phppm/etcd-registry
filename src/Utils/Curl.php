@@ -23,14 +23,14 @@ class Curl
     private $statusCode;
 
     /**
-     * @var int [millisecond]
+     * @var int [second]
      */
-    private $timeout = 3000;
+    private $timeout = 3;
 
     /**
-     * @var int [millisecond]
+     * @var int [second]
      */
-    private $connectTimeout = 0;
+    private $connectTimeout = 3;
 
     private $errno;
 
@@ -71,7 +71,7 @@ class Curl
         return $this;
     }
 
-    public function get($url, $params, $timeout = 3000)
+    public function get($url, $params, $timeout = 3)
     {
         $this->setMethod(self::METHOD_GET);
         $this->setTimeout($timeout);
@@ -80,7 +80,7 @@ class Curl
         return $this->build()->handle()->response();
     }
 
-    public function post($url, $params, $timeout = 3000)
+    public function post($url, $params, $timeout = 3)
     {
         $this->setMethod(self::METHOD_POST);
         $this->setTimeout($timeout);
@@ -90,7 +90,7 @@ class Curl
         return $this->build()->handle()->response();
     }
 
-    public function request($method, $url, $params, $timeout = 3000)
+    public function request($method, $url, $params, $timeout = 3)
     {
         $this->setMethod($method);
         $this->setTimeout($timeout);
@@ -123,7 +123,7 @@ class Curl
 
         curl_setopt($this->ch, CURLOPT_URL, $this->url);
         curl_setopt($this->ch, CURLOPT_HTTPHEADER, $this->header);
-        curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT_MS, $this->connectTimeout);
+        curl_setopt($this->ch, CURLOPT_CONNECTTIMEOUT, $this->connectTimeout);
         curl_setopt($this->ch, CURLOPT_TIMEOUT, $this->timeout);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, TRUE);
         curl_setopt($this->ch, CURLOPT_ENCODING, "");

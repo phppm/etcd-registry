@@ -6,6 +6,7 @@ namespace ZanPHP\EtcdRegistry;
 use ZanPHP\Contracts\Config\Repository;
 use ZanPHP\Coroutine\Task;
 use ZanPHP\EtcdRegistry\Exception\ServerConfigException;
+use ZanPHP\EtcdRegistry\Utils\Curl;
 use ZanPHP\HttpClient\HttpClient;
 use ZanPHP\HttpClient\Response;
 use ZanPHP\Support\Time;
@@ -101,12 +102,55 @@ class ServerRegister
     public function register($config)
     {
         $type = make(Repository::class)->get("registry.type", self::DEFAULT_REGISTRY_TYPE);
-        if ($type === "etcd") {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
-            yield $this->registerToEtcdV2($config);
-        } else if($type === "haunt") {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
-            yield $this->registerByHaunt($config);
+        while (true) {
+            $ret = false;
+            if ($type === "etcd") {
+                /** @noinspection PhpVoidFunctionResultUsedInspection */
+                $ret = $this->masterRegisterToEtcdV2($config);
+            } else if($type === "haunt") {
+                /** @noinspection PhpVoidFunctionResultUsedInspection */
+                $ret = $this->masterRegisterByHaunt($config);
+            }
+            if ($ret === true) {
+                break;
+            }
+            sleep(1);
+        }
+    }
+
+    private function masterRegisterToEtcdV2($config) {
+        $node = static::getRandEtcdNode();
+        list($etcdV2Key, $etcdV2Value) = static::createEtcdV2KV($config);
+        $detail = $this->inspect($etcdV2Value);
+
+        sys_echo("registering [$detail]");
+        $params = [
+            "value" => json_encode($etcdV2Value),
+            "ttl" => static::DEFAULT_ETD_TTL,
+        ];
+
+        $url = "http://{$node["host"]}:{$node["port"]}/v2/keys/$etcdV2Key";
+        $curl = new Curl();
+        $curl->setHeader([
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ]);
+
+        $resp = $curl->request(Curl::METHOD_PUT, $url, $params);
+
+        if ($resp->isError()) {
+            sys_echo("register to etcd:$url failed, caused by ".$resp->getError());
+            return false;
+        }
+
+        $statusCode = $resp->statusCode();
+        $body = $resp->response();
+
+        if ($statusCode >= 200 && $statusCode < 300) {
+            sys_echo("Register to etcd success [code=$statusCode]");
+            return true;
+        } else {
+            sys_error("status=$statusCode, body=$body");
+            return false;
         }
     }
 
@@ -207,32 +251,31 @@ class ServerRegister
         }
     }
 
-    private function registerByHaunt($config)
+    private function masterRegisterByHaunt($config)
     {
         $haunt = make(Repository::class)->get('registry.haunt');
 
-        $httpClient = new HttpClient($haunt['register']['host'], $haunt['register']['port']);
         $body = static::createHauntBody($config);
         $detail = $this->inspect($body['SrvList'][0]);
         sys_echo("registering [$detail]");
 
-        try {
-            $response = (yield $httpClient->postJson($haunt['register']['uri'], $body, null));
-            /** @noinspection PhpUndefinedMethodInspection */
-            $msg = rtrim($response->getBody(), "\n");
-            sys_echo("$msg [$detail]");
-            return;
-        }
-        catch (\Throwable $e) { }
-        catch (\Exception $e) { }
-        echo_exception($e);
-        sys_error("register failed: ".$haunt['register']['host'].":".$haunt['register']['port']);
+        $url = "http://{$haunt["host"]}:{$haunt["port"]}/{$haunt["register"]["uri"]}";
+        $curl = new Curl();
+        $curl->setHeader([
+            'Content-Type' => 'application/x-www-form-urlencoded'
+        ]);
 
-        Timer::after(2000, function () use ($config) {
-            /** @noinspection PhpVoidFunctionResultUsedInspection */
-            $co = $this->registerByHaunt($config);
-            Task::execute($co);
-        });
+        $resp = $curl->request(Curl::METHOD_POST, $url, $body);
+
+        if ($resp->isError()) {
+            sys_echo("register to haunt:$url failed, caused by ".$resp->getError());
+            return false;
+        }
+
+        $body = $resp->response();
+        $msg = rtrim($body, "\n");
+        sys_echo("$msg [$detail]");
+        return true;
     }
 
     private function inspect($config)

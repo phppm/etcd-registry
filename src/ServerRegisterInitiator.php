@@ -45,8 +45,7 @@ class ServerRegisterInitiator
         $configs = $this->createRegisterConfigs();
         foreach ($configs as $config) {
             $register = new ServerRegister();
-            $coroutine = $register->register($config);
-            Task::execute($coroutine);
+            $register->register($config);
         }
     }
 
