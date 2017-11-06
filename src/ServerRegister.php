@@ -42,6 +42,7 @@ class ServerRegister
         $etcdV2Key = "$protocol:$namespace/$srvName/$ip:$port";
 
         $etcdV2Value = [
+            'DataCenter' => IDC::get(),
             'Namespace' => $namespace,
             'SrvName' => $srvName,
             'IP' => $ip,
@@ -86,6 +87,7 @@ class ServerRegister
         return [
             'SrvList' => [
                 [
+                    // Haunt 不需要加上机房信息
                     'Namespace' => $namespace,
                     'SrvName' => $srvName,
                     'IP' => $ip,
