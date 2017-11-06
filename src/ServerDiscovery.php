@@ -181,6 +181,7 @@ class ServerDiscovery
             }
 
             $servers[$this->getStoreServicesKey($value['IP'], $value['Port'])] = [
+                'idc' => isset($value["DataCenter"]) ? $value["DataCenter"] : null,
                 'namespace' => $value['Namespace'],
                 'app_name' => $value['SrvName'],
                 'host' => $value['IP'],
@@ -501,6 +502,7 @@ class ServerDiscovery
     private function serverOnline($nowStore, $value)
     {
         $data['add_on_line'] = [
+            'idc' => isset($value["DataCenter"]) ? $value["DataCenter"] : null,
             'namespace' => $value['Namespace'],
             'app_name' => $value['SrvName'],
             'host' => $value['IP'],
@@ -520,6 +522,7 @@ class ServerDiscovery
     private function serverOffline($nowStore, $value)
     {
         $data['off_line'] = [
+            'idc' => isset($value["DataCenter"]) ? $value["DataCenter"] : null,
             'namespace' => $value['Namespace'],
             'app_name' => $value['SrvName'],
             'host' => $value['IP'],
@@ -540,6 +543,7 @@ class ServerDiscovery
     private function serverUpdate($nowStore, $new)
     {
         $data['update'] = [
+            'idc' => isset($value["DataCenter"]) ? $value["DataCenter"] : null,
             'namespace' => $new['Namespace'],
             'app_name' => $new['SrvName'],
             'host' => $new['IP'],
