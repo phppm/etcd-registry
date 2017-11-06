@@ -108,6 +108,7 @@ class ServerDiscoveryInitiator
             //reset $servers
             $servers = [];
             $servers[$noNeedDiscovery['connection'][$appName]['host'].':'.$noNeedDiscovery['connection'][$appName]['port']] = [
+                'idc' => null,
                 'app_name' => $appName,
                 'host' => $noNeedDiscovery['connection'][$appName]['host'],
                 'port' => $noNeedDiscovery['connection'][$appName]['port'],
