@@ -543,7 +543,7 @@ class ServerDiscovery
     private function serverUpdate($nowStore, $new)
     {
         $data['update'] = [
-            'idc' => isset($value["DataCenter"]) ? $value["DataCenter"] : null,
+            'idc' => isset($new["DataCenter"]) ? $new["DataCenter"] : null,
             'namespace' => $new['Namespace'],
             'app_name' => $new['SrvName'],
             'host' => $new['IP'],
