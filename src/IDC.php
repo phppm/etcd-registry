@@ -9,8 +9,8 @@ class IDC
 {
     private static $idc = null;
 
-    const IDC_BC = "bc";
-    const IDC_BD = "bd";
+    const BC = "bc";
+    const BD = "bd";
 
     public static function get()
     {

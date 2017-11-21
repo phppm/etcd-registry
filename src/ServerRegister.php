@@ -42,7 +42,7 @@ class ServerRegister
         $etcdV2Key = "$protocol:$namespace/$srvName/$ip:$port";
 
         $etcdV2Value = [
-            'DataCenter' => IDC::get(),
+            'DataCenter' => IDC::get() ?: IDC::BC,
             'Namespace' => $namespace,
             'SrvName' => $srvName,
             'IP' => $ip,
